@@ -46,10 +46,10 @@ class GenieService:
         If neither is available the service will remain uninitialized (stub mode).
         """
         # Prefer explicit args, otherwise fallback to server constants
-        self.token = token
-        self.client_id = client_id or DATABRICKS_CLIENT_ID
-        self.client_secret = client_secret or DATABRICKS_CLIENT_SECRET
-        self.auth_method = None
+        self.token = DATABRICKS_CLIENT_SECRET
+        self.client_id = DATABRICKS_CLIENT_ID
+        self.client_secret = DATABRICKS_CLIENT_SECRET
+        self.auth_method = "oauth"
         self.genie_api = None
 
         if not GenieAPI or not WorkspaceClient:
@@ -65,7 +65,7 @@ class GenieService:
                     client_secret=self.client_secret,
                 )
                 self.genie_api = GenieAPI(wc.api_client)
-                self.auth_method = "service_principal"
+                self.auth_method = "oauth"
                 return
             except Exception:
                 logger.exception("Failed to initialize GenieAPI with service principal")
@@ -158,5 +158,5 @@ class GenieService:
             logger.exception("Error while calling Genie API")
             return GenieReply(
                 conversation_id=conversation_id,
-                message="An error occurred while processing your request.",
+                message=f"An error occurred: {str(e)}",
             )
