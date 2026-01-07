@@ -7,6 +7,71 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Simple test UI for Databricks Genie endpoints -->
+    <div id="genie-test" style="font-family: Poppins, sans-serif; margin: 16px; max-width:900px;">
+      <h2>Genie API Test</h2>
+
+      <section style="margin-bottom:12px;">
+        <h3>Verify</h3>
+        <input id="verifyToken" placeholder="optional token" style="width:60%; margin-right:8px;" />
+        <button id="verifyBtn">Verify</button>
+        <pre id="verifyOut" style="background:#f6f8fa;padding:8px;border-radius:4px; white-space:pre-wrap; margin-top:8px;"></pre>
+      </section>
+
+      <section style="margin-bottom:12px;">
+        <h3>Send Message</h3>
+        <input id="messageToken" placeholder="optional token" style="width:60%; margin-bottom:8px;" />
+        <br />
+        <textarea id="messageText" placeholder="message text" rows="4" cols="60">hello</textarea>
+        <br />
+        <button id="sendBtn">Send</button>
+        <pre id="messageOut" style="background:#f6f8fa;padding:8px;border-radius:4px; white-space:pre-wrap; margin-top:8px;"></pre>
+      </section>
+
+      <p style="color:#666">Note: This page makes POST requests to <code>/api/genie/verify</code> and <code>/api/genie/message</code>.</p>
+    </div>
+
+    <script>
+      async function postJson(path, body) {
+        try {
+          const res = await fetch(path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json().catch(() => ({ error: "Unable to parse JSON" }));
+          return { status: res.status, ok: res.ok, data };
+        } catch (err) {
+          return { status: 0, ok: false, data: { error: String(err) } };
+        }
+      }
+
+      function updateOutput(elId, obj) {
+        const el = document.getElementById(elId);
+        el.textContent = JSON.stringify(obj, null, 2);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("verifyBtn").addEventListener("click", async () => {
+          const token = document.getElementById("verifyToken").value || undefined;
+          const payload = { token, testText: "hello" };
+          updateOutput("verifyOut", { status: "pending" });
+          const resp = await postJson("/api/genie/verify", payload);
+          updateOutput("verifyOut", resp);
+        });
+
+        document.getElementById("sendBtn").addEventListener("click", async () => {
+          const text = document.getElementById("messageText").value;
+          const token = document.getElementById("messageToken").value || undefined;
+          const payload = { text, token, spaceId: null, conversationId: null };
+          updateOutput("messageOut", { status: "pending" });
+          const resp = await postJson("/api/genie/message", payload);
+          updateOutput("messageOut", resp);
+        });
+      });
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
